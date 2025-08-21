@@ -1,16 +1,14 @@
 from airflow import DAG
 from airflow.operators.python import PythonOperator
+from airflow.models import Variable
 from datetime import datetime, timedelta
 import requests
 import os
 import pandas as pd
 
-from dotenv import load_dotenv
-load_dotenv()
-
-OPENWEATHER_API_KEY = "265b5e0f8b9bc036fbfa0a327fc169b1"
+API_KEY = Variable.get("weather_api_key")
 def fetch_weather_data(city, api_key):
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={api_key}&units=metric"
+    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API_KEY}&units=metric"
     response = requests.get(url)
     return response.json()
 
@@ -34,7 +32,7 @@ def save_weather_data_to_postgres(df):
               index=False)
 
 def run_etl():
-    raw_data = fetch_weather_data(city='Yekaterinburg', api_key=OPENWEATHER_API_KEY)
+    raw_data = fetch_weather_data(city='Yekaterinburg', api_key=API_KEY)
     transformed_data = transform_weather_data(raw_data)
     save_weather_data_to_postgres(transformed_data)
 
